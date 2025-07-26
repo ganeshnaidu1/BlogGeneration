@@ -17,12 +17,31 @@ async def create_blog(request:Request):
 
     groqllm=GroqLLm()
     llm=groqllm.get_llm()
+    
+    if llm is None:
+        return {"error": "Failed to initialize LLM. Please check your GROQ_API_KEY environment variable."}
 
     graph_builder=GraphBuilder(llm)
     if topic:
-        graph=graph_builder.set_up_graph("title_generation in english").compile()
-        result=graph.invoke({"topic":topic})
-        return result
+        current_language = data.get("current_language", "").lower()
+        if current_language in ["hindi", "french"]:
+            graph=graph_builder.set_up_graph("language").compile()
+            result=graph.invoke({"topic":topic,"current_language":current_language})
+            print(f"Language graph result: {result}")
+            # Extract the final blog content from the result
+            if isinstance(result, dict) and "blog" in result:
+                return result
+            else:
+                return {"error": "Unexpected result format", "result": result}
+        else:   
+            graph=graph_builder.set_up_graph("title_generation in english").compile()
+            result=graph.invoke({"topic":topic})
+            print(f"English graph result: {result}")
+            # Extract the final blog content from the result
+            if isinstance(result, dict) and "blog" in result:
+                return result
+            else:
+                return {"error": "Unexpected result format", "result": result}
     else:
         return {"error":"Topic is required"}
 

@@ -8,8 +8,13 @@ class GroqLLm:
     
     def get_llm(self):
         try:
-            os.environ["GROQ_API_KEY"]=os.getenv("GROQ_API_KEY")
-            self.llm=ChatGroq(
+            groq_api_key = os.getenv("GROQ_API_KEY")
+            if not groq_api_key:
+                print("Error: GROQ_API_KEY not found in environment variables")
+                return None
+            
+            os.environ["GROQ_API_KEY"] = groq_api_key
+            self.llm = ChatGroq(
                 model_name="llama3-8b-8192",
             )
             return self.llm
